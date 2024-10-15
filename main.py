@@ -8,6 +8,8 @@ import models
 from sqlalchemy.orm import Session
 import uvicorn
 import database
+import psycopg2.extras 
+import json
 
 app = FastAPI()
 # models.Base.metadata.create_all(bind=engine)
@@ -33,72 +35,23 @@ class EmployeeCreate(BaseModel):
     email: EmailStr
     phoneNumber: int
 
-# class EmployeeCreate(BaseModel):
-#     firstName: str
-#     lastName: str
-#     birthDate: date
-#     hireDate: datetime
-#     salary: float
-#     isActive: bool
-#     email: EmailStr
-#     phoneNumber: PhoneNumber
-
-# class EmployeeUpdate(BaseModel):
-#     firstName: Optional[str]
-#     lastName: Optional[str]
-#     birthDate: Optional[date]
-#     hireDate: Optional[datetime]
-#     salary: Optional[float]
-#     isActive: Optional[bool]
-#     email: Optional[EmailStr]
-#     phoneNumber: Optional[PhoneNumber]
-
-# def get_db():
-#     db = SessionLocal()
-#     try:
-#         yield db
-#     finally:
-#         db.close()
-
-# db_dependency = Annotated[Session, Depends(get_db)]
-
-# @app.get("/employeesAll/")
-# async def read_all_employees(db: db_dependency):
-#     result = db.query(models.Employee).all()
-#     if not result:
-#         raise HTTPException(status_code=404, detail='Employee does not exist')
-#     else:
-#         return result
-
-# @app.get("/employeesById/{Id}")
-# async def read_employees(Id: int, db: db_dependency):
-#     result = db.query(models.Employee).filter(models.Employee.employeeid == Id).first()
-#     if not result:
-#         raise HTTPException(status_code=404, detail='Employee does not exist')
-#     else:
-#         return result
-    
-# @app.post("/employeesCreate/")
-# async def create_employee(employee: Employee, db: db_dependency):
-#     db_firstname = models.Employee(firstname=employee.firstName)
-#     db_lastname = models.Employee(lastname=employee.lastName)
-#     db_birthdate = models.Employee(birthdate=employee.birthDate)
-#     db_hiredate = models.Employee(hiredate=employee.hireDate)
-#     db_salary = models.Employee(salary=employee.salary)
-#     db_isActive = models.Employee(isActive=employee.isActive)
-#     db_email = models.Employee(email=employee.email)
-#     db_phoneNumber = models.Employee(phoneNumber=employee.phoneNumber)
-
-#     db.add(db_firstname)
-#     db.add(db_lastname)
+class EmployeeUpdate(BaseModel):
+    firstName: Optional[str] = 'null'
+    lastName: Optional[str] = 'null'
+    birthDate: Optional[date] = 'null'
+    hireDate: Optional[datetime] = 'null'
+    salary: Optional[float] = 0
+    isActive: Optional[bool] = False
+    email: Optional[EmailStr] = 'null'
+    phoneNumber: Optional[int] = 0
 
 def get_db():
     return database.get_db_connection()
 
 @app.get("/employeesAll/")
-async def read_all_employees():
+async def read_all_employees() -> list:
     conn = get_db()
-    cur = conn.cursor()
+    cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
     cur.execute("SELECT * FROM employees")
     results = cur.fetchall()
 
@@ -106,33 +59,30 @@ async def read_all_employees():
         raise HTTPException(status_code=404, detail='Employee does not exist')
     conn.close()
 
-    columns = [desc[0] for desc in cur.description]
-    employees = []
-    for result in results:
-        employee = dict(zip(columns, result))
-        employees.append(employee)
-    return employees
+    employees = json.dumps(results, default=str)
+    # print(type(json.loads(employees)))
+    return json.loads(employees)
 
 
 @app.get("/employeesById/{Id}")
-async def read_employees(Id: int):
+async def read_employees(Id: int) -> dict:
     conn = get_db()
-    cur = conn.cursor()
+    cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
     cur.execute("SELECT * FROM employees WHERE employeeid = %s", (Id,))
     result = cur.fetchone()
 
     if not result:
         raise HTTPException(status_code=404, detail='Employee does not exist')
     conn.close()
-    
-    columns = [desc[0] for desc in cur.description]
-    employee = dict(zip(columns, result))
-    return employee
+
+    employees = json.dumps(result, default=str)
+    print(type(json.loads(employees)))
+    return json.loads(employees)
 
 @app.post("/employeesCreate/")
-async def create_employee(employee: EmployeeCreate):
+async def create_employee(employee: EmployeeCreate) -> dict:
     conn = get_db()
-    cur = conn.cursor()
+    cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
 
     """{
         "firstName": "Emily",
@@ -145,7 +95,7 @@ async def create_employee(employee: EmployeeCreate):
         "phoneNumber": 19876543210
     }"""
     cur.execute("""
-        INSERT INTO employees (firstname, lastname, birthdate, hiredate, salary, isactive, email, phonenumber)
+        INSERT INTO public.employees (firstname, lastname, birthdate, hiredate, salary, isactive, email, phonenumber)
         VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
         """, (
             employee.firstName,
@@ -157,11 +107,68 @@ async def create_employee(employee: EmployeeCreate):
             employee.email,
             employee.phoneNumber
         ))
+    conn.close()
+
     conn.commit()
     conn.close()
     return {"message": "Employee created successfully"}
 
+@app.put("/employeesUpdate/{Id}")
+async def update_employee(Id: int, employee: EmployeeUpdate) -> dict:
+    conn = get_db()
+    cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
 
+    """{
+        "firstName": "Emily",
+        "lastName": "Chen",
+        "birthDate": "1992-06-15",
+        "hireDate": "2018-03-01T09:00:00",
+        "salary": 60000.0,
+        "isActive": false,
+        "email": "emily.chen@example.com",
+        "phoneNumber": 19876543210
+    }"""
+    cur.execute("""
+        UPDATE public.employees
+        SET firstname=%s, lastname=%s, birthdate=%s, hiredate=%s, salary=%s, isactive=%s, email=%s, phonenumber=%s
+        WHERE employeeid=%s;        
+        """, (
+            employee.firstName,
+            employee.lastName,
+            employee.birthDate,
+            employee.hireDate,
+            employee.salary,
+            employee.isActive,
+            employee.email,
+            employee.phoneNumber,
+            Id
+        ))
+    conn.commit()
+    conn.close()
+    return {"message": f"Employee {Id} updated successfully"}
+
+@app.delete("/employeesDelete/{Id}")
+async def delete_employee(Id: int) -> dict:
+    conn = get_db()
+    cur = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+
+    """{
+        "firstName": "Emily",
+        "lastName": "Chen",
+        "birthDate": "1992-06-15",
+        "hireDate": "2018-03-01T09:00:00",
+        "salary": 60000.0,
+        "isActive": false,
+        "email": "emily.chen@example.com",
+        "phoneNumber": 19876543210
+    }"""
+    cur.execute("""
+        DELETE FROM public.employees
+        WHERE employeeid=%s;        
+        """, (Id, ))
+    conn.commit()
+    conn.close()
+    return {"message": f"Employee {Id} deleted successfully"}
     
 if __name__ == "__main__":
     uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=True)
