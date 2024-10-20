@@ -6,9 +6,9 @@
 
 ### 1.2 To learn how to use Jenkins for automation
 
-## 2. Custom Docker Image
+## 2. Custom Docker Images and Containers
 
-### 2.1 Write a dockerfile
+### 2.1 Write the dockerfile
 
 This dockerfile create a new PosgreSQL image and run `init.sql` during initialization.
 
@@ -24,10 +24,33 @@ COPY init.sql /docker-entrypoint-initdb.d/
 EXPOSE 5432
 ```
 
-### 2.2 Build the docker image
+This dockerfile run the FastAPI app.
+
+```dockerfile
+FROM python:3.12
+
+WORKDIR /app
+
+COPY requirements.txt .
+
+RUN pip install -r requirements.txt
+
+COPY *.py .
+
+EXPOSE 8000
+
+CMD ["python", "main.py"]
+
+```
+
+### 2.2 Build the docker images
 
 ```bash
-docker build -t employee-posgres . 
+docker build -f posgres-dockerfile -t employee-posgres . 
+```
+
+```bash
+docker build -f fastapi-dockerfile -t fastapi-employee . 
 ```
 
 ### 2.3 Write the compose Yaml named posgres-compose.yaml
@@ -49,10 +72,29 @@ volumes:
   db-data:
 ```
 
+### 2.4 Write the compose Yaml named fastapi-compose.yaml
+
+```yaml
+services:
+  fastapi_app:
+    image: fastapi-employee
+    ports:
+      - "8000:8000"
+    volumes:
+      - .:/app
+    environment:
+      - ENV=production
+    container_name: employee_app
+```
+
 ### 2.4 Run the docker compose command
 
 ```bash
 docker compose -f posgres-compose.yaml up
+```
+
+```bash
+docker compose -f fastapi-compose.yaml up
 ```
 
 ## 3. Jenkins Steps
