@@ -1,0 +1,10 @@
+services:
+  fastapi_app:
+    image: fastapi-employee
+    ports:
+      - "8000:8000"
+    volumes:
+      - .:/app
+    environment:
+      - ENV=production
+    container_name: employee_app

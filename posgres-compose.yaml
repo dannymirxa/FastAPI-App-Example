@@ -1,6 +1,6 @@
 services:
   postgres:
-    image: postgres:latest
+    image: employee-posgres
     environment:
       - POSTGRES_USER=myuser
       - POSTGRES_PASSWORD=mypassword
