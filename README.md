@@ -136,16 +136,66 @@ For now just print 'Testing Pipeline with Jenkins'. Done forget to click 'Save'.
 <img src="./Images/Test Pipeline Multistage Stages.png" alt="Alt Text" width="500">
 
 
-```jenkins
+## 4. Jenkins Pipeline
+
+### 4.1 Create Github Token
+
+This steps is to let Jenkins have access to our Github repository. Navigate to settings and create classic token.
+
+<img src="./Images/Create Github Token.png" alt="Alt Text" width="500">
+
+### 4.2 Create Jenkins Github credential
+
+After creating the token, navigate to credential section in Jenkins configuration as in the image:
+
+<img src="./Images/Create New Github Credentials in Jenkins.png" alt="Alt Text" width="500">
+
+Use email as Username and put the token generated to the Password.
+
+### 4.3 Pipeline syntax
+
+If you want to starts with a simple pipline syntax, navigate trough here:
+
+#### 4.3.1 Click the button `Pipeline Syntax` when creating a pipeline
+
+<img src="./Images/Example Pipeline Syntax: Checkout.png" alt="Alt Text" width="500">
+
+#### 4.3.1 Select the sample steps, fill in the parameters and generate the syntax
+
+<img src="./Images/Use Pipeline Syntax.png" alt="Alt Text" width="500">
+
+### 4.4 Jenkinsfile explanation
+
+```Jenkinsfile
 pipeline {
     agent any
-
     stages {
+        ### Checkout the repository
         stage('Checkout') {
             steps {
                 checkout scmGit(branches: [[name: 'main']], extensions: [], userRemoteConfigs: [[credentialsId: 'fastapi-app', url: 'https://github.com/dannymirxa/FastAPI-App-Example.git']])
             }
         }
+        ### Clone the repository
+        stage('Build') {
+            steps {
+                git branch: 'main', credentialsId: 'fastapi-app', url: 'https://github.com/dannymirxa/FastAPI-App-Example.git'
+            }
+        }
+        ### Steps below is identical as
+        ### docker build -t fastapi-test:latest -f pytest-dockerfile .
+        ### docker run fastapi-test
+        stage('Test') {
+            steps {
+                script {
+                    docker.build('fastapi-test:latest', '-f pytest-dockerfile .').inside {
+                        sh 'pytest test_main.py'
+                    }
+                }
+            }
+        }
+        
     }
 }
+
 ```
