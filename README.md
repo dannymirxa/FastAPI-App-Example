@@ -134,3 +134,18 @@ For now just print 'Testing Pipeline with Jenkins'. Done forget to click 'Save'.
 #### 3.2.2 Check the stages
 
 <img src="./Images/Test Pipeline Multistage Stages.png" alt="Alt Text" width="500">
+
+
+```jenkins
+pipeline {
+    agent any
+
+    stages {
+        stage('Checkout') {
+            steps {
+                checkout scmGit(branches: [[name: '*/main']], extensions: [], userRemoteConfigs: [[credentialsId: 'fastapi-app', url: 'https://github.com/dannymirxa/FastAPI-App-Example.git']])
+            }
+        }
+    }
+}
+```
