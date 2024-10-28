@@ -1,14 +1,21 @@
 services:
   postgres:
-    image: employee-posgres
+    image: employee-posgres:latest
     environment:
       - POSTGRES_USER=myuser
-      - POSTGRES_PASSWORD=mypassword
       - POSTGRES_DB=Employees
+      - POSTGRES_PASSWORD_FILE=/run/secrets/postgres_password
     ports:
       - "5432:5432"
     volumes:
       - db-data:/var/lib/postgresql/data
+    secrets:
+      - postgres_password
     container_name: employee_db
+
+secrets:
+  postgres_password:
+    file: ./postgres_password.txt
+
 volumes:
   db-data:
