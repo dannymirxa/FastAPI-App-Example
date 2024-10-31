@@ -12,11 +12,11 @@ Base = declarative_base()
 
 import psycopg2
 
-DATABASE_URL = "postgresql://myuser:mypassword@localhost:5432/Employees"
+# DATABASE_URL = "postgresql://myuser:mypassword@localhost:5432/Employees"
 
 def get_db_connection():
     conn = psycopg2.connect(
-        host="localhost",
+        host="emloyee_db",
         port=5432,
         database="Employees",
         user="myuser",

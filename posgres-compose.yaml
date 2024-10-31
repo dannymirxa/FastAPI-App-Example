@@ -1,6 +1,9 @@
 services:
   postgres:
     image: employee-posgres:latest
+    build:
+      context: .
+      dockerfile: posgres-dockerfile
     environment:
       - POSTGRES_USER=myuser
       - POSTGRES_DB=Employees

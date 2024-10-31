@@ -1,6 +1,9 @@
 services:
   fastapi_app:
-    image: fastapi-employee
+    image: fastapi-employee:latest
+    build:
+      context: .
+      dockerfile: fastapi-dockerfile
     ports:
       - "8000:8000"
     volumes:
