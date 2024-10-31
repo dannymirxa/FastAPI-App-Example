@@ -11,3 +11,9 @@ services:
     environment:
       - ENV=production
     container_name: employee_app
+    networks:
+      - app-network
+
+networks:
+  app-network:
+    driver: bridge

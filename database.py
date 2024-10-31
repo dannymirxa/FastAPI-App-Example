@@ -16,7 +16,7 @@ import psycopg2
 
 def get_db_connection():
     conn = psycopg2.connect(
-        host="emloyee_db",
+        host="employee_db",
         port=5432,
         database="Employees",
         user="myuser",
