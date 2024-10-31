@@ -21,3 +21,7 @@ docker compose -f posgres-compose.yaml up
 ```docker
 docker compose -f fastapi-compose.yaml up
 ```
+
+## Architecture
+
+<img src="./Architecture.png" style="width:600px;"/>
