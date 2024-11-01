@@ -8,23 +8,13 @@
 docker network create app-network
 ```
 
-Build Docker Image
-
-```docker
-docker 
-
-docker build -t employee-posgres:latest -f posgres-dockerfile .
-
-docker build -t fastapi-employee -f fastapi-dockerfile .
-```
-
-### 2. Docker Compose Posgres
+### 2. Run Docker Compose Posgres
 
 ```docker
 docker compose -f posgres-compose.yaml up
 ```
 
-### 3. Docker Compose FastAPI App
+### 3. Run Docker Compose FastAPI App
 
 ```docker
 docker compose -f fastapi-compose.yaml up
