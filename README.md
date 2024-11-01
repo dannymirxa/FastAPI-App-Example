@@ -2,9 +2,17 @@
 
 ## How to run
 
-### 1. Build Docker Image
+### 1. Create Docker Network
 
 ```docker
+docker network create app-network
+```
+
+Build Docker Image
+
+```docker
+docker 
+
 docker build -t employee-posgres:latest -f posgres-dockerfile .
 
 docker build -t fastapi-employee -f fastapi-dockerfile .
